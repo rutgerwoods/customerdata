@@ -1,0 +1,48 @@
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+
+def generate_large_ecommerce_dataset(n_customers=10000, start_date='2018-01-01', end_date='2023-12-31'):
+    np.random.seed(42)
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+    date_range = pd.date_range(start=start_date, end=end_date)
+
+    data = []
+    for customer_id in range(1, n_customers + 1):
+        n_orders = np.random.randint(1, 100)  # Some customers have many orders
+        customer_start = start_date + timedelta(days=np.random.randint(0, (end_date - start_date).days))
+        for _ in range(n_orders):
+            order_date = customer_start + timedelta(days=np.random.randint(0, (end_date - customer_start).days))
+            # Log-normal distribution for order amounts
+            amount = np.random.lognormal(mean=4, sigma=1)
+            data.append([f'CUST_{customer_id:05d}', order_date, amount])
+
+    df = pd.DataFrame(data, columns=['customer_id', 'order_date', 'amount'])
+    df = df.sort_values(['customer_id', 'order_date'])
+
+    # Add some product categories
+    categories = ['Electronics', 'Clothing', 'Home & Garden', 'Books', 'Sports', 'Beauty', 'Toys']
+    df['category'] = np.random.choice(categories, size=len(df))
+
+    return df
+
+# Generate the dataset
+large_df = generate_large_ecommerce_dataset()
+
+# Basic statistics
+print(f"Total number of transactions: {len(large_df)}")
+print(f"Number of unique customers: {large_df['customer_id'].nunique()}")
+print(f"Date range: {large_df['order_date'].min()} to {large_df['order_date'].max()}")
+print(f"Amount range: ${large_df['amount'].min():.2f} to ${large_df['amount'].max():.2f}")
+
+# Save to CSV
+csv_filename = 'large_ecommerce_dataset.csv'
+large_df.to_csv(csv_filename, index=False)
+print(f"Dataset saved to {csv_filename}")
+
+# Display first few rows
+print(large_df.head())
+
+# Display summary statistics
+print(large_df.describe())
