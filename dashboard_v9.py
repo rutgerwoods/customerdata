@@ -112,18 +112,18 @@ def fetch_mailchimp_data(api_key, list_id):
     st.warning("Dit is een placeholder voor de Mailchimp integratie. Bij een echte implementatie zou dit data ophalen uit je Mailchimp account.")
     return pd.DataFrame()  # Return empty DataFrame for now
 
-def calculate_advanced_clv(df, time_period=12):
+def calculate_advanced_clv(df, time_period=24):
     # Prepare the data
     df['order_date'] = pd.to_datetime(df['order_date'])
-    
+   
     # Filter out rows with non-positive monetary values
     df_positive = df[df['amount'] > 0]
-    
+   
     if len(df_positive) < len(df):
         st.warning(f"Removed {len(df) - len(df_positive)} transactions with non-positive monetary values.")
-    
+   
     summary = summary_data_from_transaction_data(df_positive, 'customer_id', 'order_date', 'amount')
-    
+   
     # Data checks
     if summary['frequency'].max() == 0:
         st.error("Data issue: All customers have only one purchase. CLV calculation is not possible.")
@@ -135,7 +135,12 @@ def calculate_advanced_clv(df, time_period=12):
         high = summary[col].quantile(0.99)
         summary = summary[(summary[col] >= low) & (summary[col] <= high)]
 
+    # Ensure all monetary values are positive
+    summary['monetary_value'] = summary['monetary_value'].clip(lower=0.01)
+
+    # Log summary statistics
     st.info(f"Analyzing {len(summary)} customers after data preparation.")
+    st.info(f"Monetary value range: {summary['monetary_value'].min():.2f} to {summary['monetary_value'].max():.2f}")
 
     # Fit the BG/NBD model with higher penalizer
     bgf = BetaGeoFitter(penalizer_coef=0.1)
@@ -148,7 +153,9 @@ def calculate_advanced_clv(df, time_period=12):
     # Fit the Gamma-Gamma model with higher penalizer
     ggf = GammaGammaFitter(penalizer_coef=0.1)
     try:
-        ggf.fit(summary['frequency'], summary['monetary_value'])
+        # Only use customers with at least one repeat purchase
+        repeat_customers = summary[summary['frequency'] > 0]
+        ggf.fit(repeat_customers['frequency'], repeat_customers['monetary_value'])
     except Exception as e:
         st.error(f"Error fitting Gamma-Gamma model: {str(e)}")
         return None, None, None
@@ -163,7 +170,7 @@ def calculate_advanced_clv(df, time_period=12):
     # Calculate CLV
     try:
         clv = ggf.customer_lifetime_value(
-            bgf, 
+            bgf,
             summary['frequency'],
             summary['recency'],
             summary['T'],
@@ -178,7 +185,24 @@ def calculate_advanced_clv(df, time_period=12):
     # Combine results
     results = pd.concat([summary, clv.rename('CLV')], axis=1)
     results['predicted_purchases'] = predicted_purchases
-    
+
+    # Additional calculations for comparison
+    average_clv = clv.mean()
+    total_revenue = df['amount'].sum()
+    total_customers = df['customer_id'].nunique()
+    average_revenue_per_customer = total_revenue / total_customers
+
+    st.info(f"Gemiddelde CLV: €{average_clv:.2f}")
+    st.info(f"Gemiddelde omzet per klant: €{average_revenue_per_customer:.2f}")
+    st.info(f"Totale omzet: €{total_revenue:.2f}")
+    st.info(f"Totaal aantal unieke klanten: {total_customers}")
+    st.info(f"Gemiddeld aantal aankopen per klant: {df.groupby('customer_id').size().mean():.2f}")
+    st.info(f"Gemiddelde tijd sinds eerste aankoop (in dagen): {summary['T'].mean():.2f}")
+
+    # Add comparison information to results
+    results['Average_Revenue'] = average_revenue_per_customer
+    results['CLV_to_Average_Revenue_Ratio'] = results['CLV'] / average_revenue_per_customer
+   
     return results, bgf, ggf
 
 def visualize_clv(results, bgf, ggf):
@@ -187,19 +211,31 @@ def visualize_clv(results, bgf, ggf):
         return
 
     st.subheader("Customer Lifetime Value Analyse")
-    
+   
     # CLV Distribution
     fig_clv = px.histogram(results, x='CLV', nbins=50,
                            title='Verdeling van Customer Lifetime Value',
                            labels={'CLV': 'Customer Lifetime Value'})
     st.plotly_chart(fig_clv)
-    
+   
     # Top 10 Customers by CLV
     top_customers = results.sort_values('CLV', ascending=False).head(10)
     st.subheader("Top 10 Klanten bij Lifetime Value")
     st.write(top_customers[['frequency', 'recency', 'T', 'monetary_value', 'CLV']])
 
-# Update deze functie
+    # CLV vs Average Revenue Comparison
+    fig_comparison = px.scatter(results, x='Average_Revenue', y='CLV',
+                                title='CLV vs. Gemiddelde Omzet per Klant',
+                                labels={'Average_Revenue': 'Gemiddelde Omzet', 'CLV': 'Customer Lifetime Value'},
+                                hover_data=['customer_id', 'frequency', 'recency'])
+    st.plotly_chart(fig_comparison)
+
+    # CLV to Average Revenue Ratio Distribution
+    fig_ratio = px.histogram(results, x='CLV_to_Average_Revenue_Ratio',
+                             title='Verdeling van CLV / Gemiddelde Omzet Ratio',
+                             labels={'CLV_to_Average_Revenue_Ratio': 'CLV / Gemiddelde Omzet Ratio'})
+    st.plotly_chart(fig_ratio)
+
 def calculate_customer_lifetime_value(df):
     return df.groupby('customer_id')['amount'].sum()
 
@@ -218,7 +254,6 @@ def generate_personalized_campaigns(segment):
     }
     return campaigns.get(segment, ["Geen specifieke campagne beschikbaar."])
 
-
 def generate_dummy_data(n_customers=1000, start_date=None, end_date=None):
     if start_date is None:
         start_date = datetime.now() - timedelta(days=730)  # 2 years ago
@@ -234,8 +269,8 @@ def generate_dummy_data(n_customers=1000, start_date=None, end_date=None):
         customer_id = f"CUST_{np.random.randint(10000, 99999)}"
         for _ in range(n_orders):
             order_date = np.random.choice(date_range)
-            # Ensure positive amounts with some variability
-            amount = np.random.lognormal(mean=3, sigma=1)  # This generates positive values
+            # Ensure strictly positive amounts with some variability
+            amount = max(0.01, np.random.lognormal(mean=3, sigma=1))  # Minimum amount of 0.01
             data.append([customer_id, order_date, amount])
     
     df = pd.DataFrame(data, columns=['customer_id', 'order_date', 'amount'])
@@ -246,7 +281,22 @@ def generate_dummy_data(n_customers=1000, start_date=None, end_date=None):
     # Ensure no duplicate (customer_id, order_date) combinations
     df = df.groupby(['customer_id', 'order_date']).agg({'amount': 'sum'}).reset_index()
     
+    # Extra check to ensure all amounts are positive
+    assert (df['amount'] > 0).all(), "Error: Non-positive amounts found in generated data"
+    
     return df
+
+# Optioneel: Voeg deze functie toe om de gegenereerde data te controleren
+def check_generated_data(df):
+    print(f"Total number of records: {len(df)}")
+    print(f"Number of unique customers: {df['customer_id'].nunique()}")
+    print(f"Date range: {df['order_date'].min()} to {df['order_date'].max()}")
+    print(f"Amount range: {df['amount'].min():.2f} to {df['amount'].max():.2f}")
+    print(f"Any non-positive amounts: {(df['amount'] <= 0).any()}")
+
+# Gebruik:
+# df = generate_dummy_data()
+# check_generated_data(df)
 
 # Wijzig deze functie
 def score_rfm_column(column, reverse=False):
