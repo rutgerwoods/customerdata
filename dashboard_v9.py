@@ -216,7 +216,7 @@ def generate_personalized_campaigns(segment):
         "Can't Lose Them": ["VIP concierge service", "Exclusive offline event invitation"],
         "Hibernating": ["Reintroduction to new products/features", "Surprise and delight campaign"]
     }
-    return campaigns.get(segment, ["No specific campaigns available."])
+    return campaigns.get(segment, ["Geen specifieke campagne beschikbaar."])
 
 
 def generate_dummy_data(n_customers=1000, start_date=None, end_date=None):
@@ -358,8 +358,8 @@ Deze krachtige analyse-tool is speciaal ontwikkeld voor e-commerce bedrijven. Be
 
 # Data Source Selection
 data_source = st.radio(
-    "Choose your data source:",
-    ('Upload CSV', 'Connect Shopify', 'Connect Mailchimp', 'Use Dummy Data')
+    "Kies je databron:",
+    ('Upload CSV', 'Connect Shopify', 'Connect Mailchimp', 'Gebruik Dummy Data')
 )
 
 df = None
@@ -387,19 +387,19 @@ if data_source == 'Upload CSV':
             st.success("Kolommen zijn toegewezen en datumformaat is ingesteld!")
 
 elif data_source == 'Connect Shopify':
-    st.info("Shopify integration coming soon! For now, please use the CSV upload option.")
+    st.info("Shopify integratie komt eraan! Gebruik voor nu de CSV upload optie alstublieft.")
     api_key = st.text_input("Enter your Shopify API key")
     shop_url = st.text_input("Enter your Shopify store URL")
     if st.button("Fetch Shopify Data"):
         df = fetch_shopify_data(api_key, shop_url)
 elif data_source == 'Connect Mailchimp':
-    st.info("Mailchimp integration coming soon! For now, please use the CSV upload option.")
-    api_key = st.text_input("Enter your Mailchimp API key")
-    list_id = st.text_input("Enter your Mailchimp list ID")
+    st.info("Mailchimp integratie komt eraan! Gebruik voor nu de CSV upload optie alstublieft.")
+    api_key = st.text_input("Vul je Mailchimp API key in")
+    list_id = st.text_input("Vul je Mailchimp list ID in")
     if st.button("Fetch Mailchimp Data"):
         df = fetch_mailchimp_data(api_key, list_id)
-elif data_source == 'Use Dummy Data':
-    st.info("Using dummy data for demonstration purposes.")
+elif data_source == 'Gebruik Dummy Data':
+    st.info("Gebruik Dummy Data voor demonstratie.")
     df = generate_dummy_data()
     date_format = "%Y-%m-%d"  # Standaard datumformaat voor voorbeelddata
 
@@ -437,14 +437,14 @@ if df is not None:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("RFM Score Distribution")
+            st.subheader("RFM Score Verdeling")
             fig_rfm = px.histogram(rfm, x='RFM_Score', nbins=20, 
                                    labels={'RFM_Score': 'RFM Score', 'count': 'Number of Customers'},
                                    title='Distribution of RFM Scores')
             st.plotly_chart(fig_rfm)
         
         with col2:
-            st.subheader("Customer Segment Distribution")
+            st.subheader("Customer Segment Verdeling")
             segment_counts = rfm['Customer_Segment'].value_counts()
             fig_segments = px.pie(values=segment_counts.values, names=segment_counts.index, 
                                   title='Customer Segments')
@@ -549,19 +549,19 @@ if df is not None:
         # Call-to-Action
         st.markdown("""
         ---
-        ## 🚀 Ready to take your e-commerce marketing to the next level?
-        This free tool is just the beginning. Imagine what we could do with a full integration of your data sources and custom-tailored strategies.
-        
-        ### Book a free consultation to learn how we can:
-        - Fully integrate with your Shopify store and Mailchimp campaigns
-        - Provide real-time RFM analysis and automated segmentation
-        - Develop AI-driven predictive models for customer behavior
-        - Create a custom dashboard tailored to your specific KPIs
-        
-        [Book Your Free Consultation Now](https://your-booking-link.com)
+        ## 🚀 Klaar om uw e-commerce marketing naar een hoger niveau te tillen?
+        Deze gratis tool is nog maar het begin. Stel u voor wat we kunnen bereiken met een volledige integratie van uw gegevensbronnen en op maat gemaakte strategieën.
+       
+        ### Boek een gratis consult om te ontdekken hoe we:
+        - Volledig kunnen integreren met uw Shopify-winkel en Mailchimp-campagnes
+        - Real-time RFM-analyse en geautomatiseerde segmentatie kunnen bieden
+        - AI-gestuurde voorspellende modellen voor klantgedrag kunnen ontwikkelen
+        - Een dashboard op maat kunnen creëren, afgestemd op uw specifieke KPI's
+       
+        Mail naar rutger.bos@dataoaklabs.com om een afspraak te maken!
         """)
 else:
-    st.info("Upload your data or connect to a data source to get started!")
+    st.info("Upload uw gegevens of maak verbinding met een gegevensbron om te beginnen!")
 
 # Footer
 st.markdown("""
