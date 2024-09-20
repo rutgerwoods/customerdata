@@ -27,89 +27,89 @@ def calculate_rfm_score(row):
 
 def assign_customer_segment(score):
     if score >= 555:
-        return "Champions"
+        return "Topklanten"
     elif 445 <= score <= 554:
-        return "Loyal Customers"
+        return "Trouwe Llanten"
     elif 334 <= score <= 444:
-        return "Potential Loyalists"
+        return "Potentiële Loyalisten"
     elif 511 <= score <= 555:
-        return "New Customers"
+        return "Nieuwe Klanten"
     elif 412 <= score <= 444:
-        return "Promising"
+        return "Veelbeloend"
     elif 322 <= score <= 411:
-        return "Need Attention"
+        return "Behoeft Aandacht"
     elif 311 <= score <= 322:
-        return "About to Sleep"
+        return "Bijna Inactief"
     elif 222 <= score <= 310:
-        return "At Risk"
+        return "Risico"
     elif 145 <= score <= 311:
-        return "Can't Lose Them"
+        return "Kunnen We Niet Verliezen"
     else:
-        return "Hibernating"
+        return "Slapend"
 
 def get_segment_recommendations(segment):
     recommendations = {
-        "Champions": [
-            "Provide early access to new products or exclusive offers",
-            "Give enhanced benefits in your loyalty program",
-            "Encourage referrals with rewards"
+        "Topklanten": [
+            "Bied vroege toegang tot nieuwe producten of exclusieve aanbiedingen",
+            "Geef extra voordelen in uw loyaliteitsprogramma",
+            "Moedig doorverwijzingen aan met beloningen"
         ],
-        "Loyal Customers": [
-            "Send personalized product suggestions",
-            "Use targeted email campaigns for upselling and cross-selling",
-            "Offer rewards for reviews or social media engagement"
+        "Trouwe Klanten": [
+            "Stuur gepersonaliseerde productaanbevelingen",
+            "Gebruik gerichte e-mailcampagnes voor upselling en cross-selling",
+            "Bied beloningen voor recensies of engagement op sociale media"
         ],
-        "Potential Loyalists": [
-            "Offer time-sensitive discounts or free shipping on next purchase",
-            "Send free samples of new or premium products",
-            "Ask for feedback or reviews on recent purchases"
+        "Potentiële Loyalisten": [
+            "Bied tijdgebonden kortingen of gratis verzending bij de volgende aankoop",
+            "Stuur gratis monsters van nieuwe of premium producten",
+            "Vraag om feedback of recensies over recente aankopen"
         ],
-        "New Customers": [
-            "Set up automated email sequences for onboarding",
-            "Offer a discount for their second purchase",
-            "Provide educational content about your products or brand"
+        "Nieuwe Klanten": [
+            "Zet geautomatiseerde e-mailreeksen op voor onboarding",
+            "Bied korting aan voor hun tweede aankoop",
+            "Verstrek educatieve inhoud over uw producten of merk"
         ],
-        "Promising": [
-            "Send personalized offers based on browsing behavior",
-            "Send follow-up emails after purchase",
-            "Offer discounts on abandoned carts"
+        "Veelbelovend": [
+            "Stuur gepersonaliseerde aanbiedingen op basis van surfgedrag",
+            "Stuur follow-up e-mails na aankoop",
+            "Bied kortingen aan op verlaten winkelwagens"
         ],
-        "Need Attention": [
-            "Send reactivation emails with special discounts",
-            "Show reviews, testimonials, or social proof",
-            "Use limited-time promotions to encourage purchases"
+        "Behoeft Aandacht": [
+            "Stuur reactivatie-e-mails met speciale kortingen",
+            "Toon recensies, getuigenissen of sociaal bewijs",
+            "Gebruik promoties met beperkte tijd om aankopen te stimuleren"
         ],
-        "About to Sleep": [
-            "Send a 'We miss you' email with an aggressive discount",
-            "Offer free shipping as an incentive",
-            "Send a reactivation survey"
+        "Bijna Inactief": [
+            "Stuur een 'We missen u' e-mail met een agressieve korting",
+            "Bied gratis verzending aan als stimulans",
+            "Stuur een reactivatie-enquête"
         ],
-        "At Risk": [
-            "Send targeted emails highlighting changes or new features",
-            "Conduct engagement surveys for feedback",
-            "Offer strong incentives like 30-50% off next purchase"
+        "Risico": [
+            "Stuur gerichte e-mails die wijzigingen of nieuwe functies benadrukken",
+            "Voer betrokkenheidsenquêtes uit voor feedback",
+            "Bied sterke prikkels zoals 30-50% korting op de volgende aankoop"
         ],
-        "Can't Lose Them": [
-            "Reach out with urgent re-engagement campaigns",
-            "Provide exclusive VIP offers",
-            "Conduct direct surveys or calls to understand needs"
+        "Kunnen We Niet Verliezen": [
+            "Benader met urgente heractiveringscampagnes",
+            "Bied exclusieve VIP-aanbiedingen",
+            "Voer directe enquêtes of gesprekken om behoeften te begrijpen"
         ],
-        "Hibernating": [
-            "Send a final 'Come back' email with a significant discount",
-            "Consider removing from frequent marketing emails",
-            "Run tests with different content types for re-engagement"
+        "Slapend": [
+            "Stuur een laatste 'Kom terug' e-mail met een aanzienlijke korting",
+            "Overweeg om ze te verwijderen uit frequente marketing e-mails",
+            "Voer tests uit met verschillende inhoudstypen voor heractivering"
         ]
     }
-    return recommendations.get(segment, ["No specific recommendations available."])
+    return recommendations.get(segment, ["Geen specifieke aanbevelingen beschikbaar."])
 
 def fetch_shopify_data(api_key, shop_url):
     # Placeholder function - replace with actual Shopify API integration
-    st.warning("This is a placeholder for Shopify integration. In a real implementation, this would fetch data from your Shopify store.")
+    st.warning("Dit is een placeholder voor de Shopify integratie. Bij een echte implementatie zou dit data ophalen uit je Shopify account.")
     return pd.DataFrame()  # Return empty DataFrame for now
 
 def fetch_mailchimp_data(api_key, list_id):
     # Placeholder function - replace with actual Mailchimp API integration
-    st.warning("This is a placeholder for Mailchimp integration. In a real implementation, this would fetch data from your Mailchimp account.")
+    st.warning("Dit is een placeholder voor de Mailchimp integratie. Bij een echte implementatie zou dit data ophalen uit je Mailchimp account.")
     return pd.DataFrame()  # Return empty DataFrame for now
 
 def calculate_advanced_clv(df, time_period=12):
@@ -186,17 +186,17 @@ def visualize_clv(results, bgf, ggf):
         st.error("Unable to visualize CLV due to calculation errors.")
         return
 
-    st.subheader("Customer Lifetime Value Analysis")
+    st.subheader("Customer Lifetime Value Analyse")
     
     # CLV Distribution
     fig_clv = px.histogram(results, x='CLV', nbins=50,
-                           title='Distribution of Customer Lifetime Value',
+                           title='Verdeling van Customer Lifetime Value',
                            labels={'CLV': 'Customer Lifetime Value'})
     st.plotly_chart(fig_clv)
     
     # Top 10 Customers by CLV
     top_customers = results.sort_values('CLV', ascending=False).head(10)
-    st.subheader("Top 10 Customers by Lifetime Value")
+    st.subheader("Top 10 Klanten bij Lifetime Value")
     st.write(top_customers[['frequency', 'recency', 'T', 'monetary_value', 'CLV']])
 
 # Update deze functie
@@ -313,7 +313,7 @@ def calculate_metrics(df):
     return total_customers, total_revenue, average_revenue, aov, avg_purchases, clv
 
 def create_home_dashboard(df, rfm):
-    st.header("🏠 Home Dashboard")
+    st.header("🏠 Dashboard")
 
     # Calculate basic metrics
     total_customers, total_revenue, average_revenue, aov, avg_purchases, simple_clv = calculate_metrics(df)
@@ -325,7 +325,7 @@ def create_home_dashboard(df, rfm):
         advanced_clv = results['CLV'].mean()
     else:
         advanced_clv = simple_clv
-        st.warning("Advanced CLV calculation failed. Using simple CLV instead.")
+        st.warning("Geavanceerde CLV calculatie gestopt. Gebruik de simpele CLV.")
 
     # KPI overzicht
     col1, col2, col3 = st.columns(3)
@@ -353,8 +353,7 @@ st.set_page_config(page_title="E-commerce RFM Analytics Suite", page_icon="📊"
 
 st.title('🚀 E-commerce RFM Analytics Suite')
 st.markdown("""
-This powerful analytics tool is designed exclusively for e-commerce businesses with 11-50 employees. 
-Harness the power of RFM (Recency, Frequency, Monetary) analysis to supercharge your marketing strategy and skyrocket your revenue!
+Deze krachtige analyse-tool is speciaal ontwikkeld voor e-commerce bedrijven. Benut de mogelijkheden van RFM-analyse (Recency, Frequency, Monetary) om uw marketingstrategie te versterken en uw omzet te vergroten.
 """)
 
 # Data Source Selection
