@@ -138,10 +138,6 @@ def calculate_advanced_clv(df, time_period=24):
     # Ensure all monetary values are positive
     summary['monetary_value'] = summary['monetary_value'].clip(lower=0.01)
 
-    # Log summary statistics
-    st.info(f"Analyzing {len(summary)} customers after data preparation.")
-    st.info(f"Monetary value range: {summary['monetary_value'].min():.2f} to {summary['monetary_value'].max():.2f}")
-
     # Fit the BG/NBD model with higher penalizer
     bgf = BetaGeoFitter(penalizer_coef=0.1)
     try:
@@ -192,13 +188,6 @@ def calculate_advanced_clv(df, time_period=24):
     total_customers = df['customer_id'].nunique()
     average_revenue_per_customer = total_revenue / total_customers
 
-    st.info(f"Gemiddelde CLV: €{average_clv:.2f}")
-    st.info(f"Gemiddelde omzet per klant: €{average_revenue_per_customer:.2f}")
-    st.info(f"Totale omzet: €{total_revenue:.2f}")
-    st.info(f"Totaal aantal unieke klanten: {total_customers}")
-    st.info(f"Gemiddeld aantal aankopen per klant: {df.groupby('customer_id').size().mean():.2f}")
-    st.info(f"Gemiddelde tijd sinds eerste aankoop (in dagen): {summary['T'].mean():.2f}")
-
     # Add comparison information to results
     results['Average_Revenue'] = average_revenue_per_customer
     results['CLV_to_Average_Revenue_Ratio'] = results['CLV'] / average_revenue_per_customer
@@ -209,32 +198,23 @@ def visualize_clv(results, bgf, ggf):
     if results is None or bgf is None or ggf is None:
         st.error("Unable to visualize CLV due to calculation errors.")
         return
-
-    st.subheader("Customer Lifetime Value Analyse")
    
-    # CLV Distribution
-    fig_clv = px.histogram(results, x='CLV', nbins=50,
-                           title='Verdeling van Customer Lifetime Value',
-                           labels={'CLV': 'Customer Lifetime Value'})
-    st.plotly_chart(fig_clv)
-   
-    # Top 10 Customers by CLV
-    top_customers = results.sort_values('CLV', ascending=False).head(10)
-    st.subheader("Top 10 Klanten bij Lifetime Value")
-    st.write(top_customers[['frequency', 'recency', 'T', 'monetary_value', 'CLV']])
+    # Maak twee kolommen
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Top 10 Customers by CLV
+        st.subheader("Top 10 Klanten bij Lifetime Value")
+        top_customers = results.sort_values('CLV', ascending=False).head(10)
+        st.dataframe(top_customers[['frequency', 'recency', 'T', 'monetary_value', 'CLV']])
 
-    # CLV vs Average Revenue Comparison
-    fig_comparison = px.scatter(results, x='Average_Revenue', y='CLV',
-                                title='CLV vs. Gemiddelde Omzet per Klant',
-                                labels={'Average_Revenue': 'Gemiddelde Omzet', 'CLV': 'Customer Lifetime Value'},
-                                hover_data=['customer_id', 'frequency', 'recency'])
-    st.plotly_chart(fig_comparison)
-
-    # CLV to Average Revenue Ratio Distribution
-    fig_ratio = px.histogram(results, x='CLV_to_Average_Revenue_Ratio',
-                             title='Verdeling van CLV / Gemiddelde Omzet Ratio',
-                             labels={'CLV_to_Average_Revenue_Ratio': 'CLV / Gemiddelde Omzet Ratio'})
-    st.plotly_chart(fig_ratio)
+    with col2:
+        # CLV Distribution
+        st.subheader("Verdeling van Customer Lifetime Value")
+        fig_clv = px.histogram(results, x='CLV', nbins=50,
+                               labels={'CLV': 'Customer Lifetime Value'})
+        fig_clv.update_layout(height=400)  # Pas de hoogte aan indien nodig
+        st.plotly_chart(fig_clv, use_container_width=True)
 
 def calculate_customer_lifetime_value(df):
     return df.groupby('customer_id')['amount'].sum()
@@ -507,39 +487,12 @@ if df is not None:
                                 title='RFM Segmentation')
         st.plotly_chart(fig_bubble)
 
-        # Advanced Analytics
-        st.header("🧠 Geavanceerde Analytics")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("Customer Lifetime Value")
-            clv = calculate_customer_lifetime_value(df)
-            fig_clv = px.histogram(clv, nbins=20, labels={'value': 'Customer Lifetime Value'},
-                                   title='Distribution of Customer Lifetime Value')
-            st.plotly_chart(fig_clv)
-
 
         # In your main Streamlit app
         st.header("🔮 Geavanceerde Customer Lifetime Value Analyse")
         results, bgf, ggf = calculate_advanced_clv(df)
         if results is not None:
             visualize_clv(results, bgf, ggf)
-
-            # Additional Insights
-            st.subheader("CLV Inzichten")
-            total_clv = results['CLV'].sum()
-            avg_clv = results['CLV'].mean()
-            st.write(f"Total Customer Lifetime Value: €{total_clv:,.2f}")
-            st.write(f"Average Customer Lifetime Value: €{avg_clv:,.2f}")
-
-            # Segment CLV Analysis
-            if 'Customer_Segment' in results.columns:
-                segment_clv = results.groupby('Customer_Segment')['CLV'].agg(['mean', 'sum']).sort_values('sum', ascending=False)
-                st.write("CLV by Customer Segment:")
-                st.write(segment_clv)
-            else:
-                st.warning("Customer Segment information is not available for CLV analysis.")
 
             
         else:
